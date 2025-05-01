@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.env
+.venv
+venv/
+ENV/
+env/
+
+# Bytecode
+*.pyo
+*.pyd
+.Python
+
+# Test outputs
+coverage/
+htmlcov/
+
+# Node
+node_modules/
+yarn-debug.log*
+yarn-error.log*
+npm-debug.log*
+pnpm-debug.log*
+
+# Bundler / build outputs
+.next/
+dist/
+.cache/
+.vite/
+
+# macOS
+.DS_Store
+
+# IDEs and editors
+.idea/
+.vscode/
+*.code-workspace
+
+# Docker
+*.log
+*.pid
+
+# Env files
+.env*
+!.env.example 
