@@ -19,9 +19,12 @@ docs/      # Architecture diagrams and ADRs
 
 ## Quick Start
 ```bash
-# Spin up backend (FastAPI) and frontend (Vite) with hot-reload
+# Start FastAPI, LocalStack S3, and (later) frontend
 make dev
 ```
+
+LocalStack spins up an S3 mock on `http://localhost:4566` so no AWS account is needed for local tests.
+
 Navigate to `http://localhost:3000` for the front-end and `http://localhost:8000/docs` for the FastAPI Swagger UI.
 
 ## CI / CD
