@@ -2,7 +2,7 @@ from datetime import datetime
 from uuid import uuid4
 from io import BytesIO
 
-from fastapi import APIRouter, UploadFile, File, Depends, status
+from fastapi import APIRouter, UploadFile, File, Depends, status, Request
 import pandas as pd
 
 from ..services.extract import extract
@@ -17,6 +17,7 @@ router = APIRouter(prefix="/extract", tags=["extraction"])
 
 @router.post("/", response_model=ExtractionResult, status_code=status.HTTP_201_CREATED)
 async def extract_route(
+    request: Request,
     file: UploadFile = File(...),
     s3=Depends(get_s3_client),
 ):
@@ -50,4 +51,11 @@ async def extract_route(
     annotated = detect_anomalies(df, numeric_cols=["measurement"])
     anomaly_count = int(annotated["is_anomaly"].sum())
 
-    return {"sheet_name": result.sheet_name, "rows": result.rows, "anomalies": anomaly_count} 
+    # push into in-memory store (simple)
+    job = {"sheet_name": result.sheet_name, "anomalies": anomaly_count}
+    # store latest jobs (max 20) in app state
+    jobs: list = request.app.state.jobs  # type: ignore
+    jobs.insert(0, job)
+    request.app.state.jobs = jobs[:20]
+
+    return job 
