@@ -19,12 +19,17 @@ def test_extract_valid(monkeypatch):
 
 
 def test_extract_fallback(monkeypatch):
-    # Simulate GPT failure, ensure Textract fallback path taken
-    monkeypatch.setattr(svc, "call_gpt_4o", lambda _: (_ for _ in ()).throw(RuntimeError))
-    monkeypatch.setattr(
-        svc,
-        "call_textract",
-        lambda _: {"sheet_name": "fallback", "rows": []},
-    )
+    # Mock S3 put_object to ensure it gets called
+    put_called = {}
+    monkeypatch.setattr(svc.boto3, "client", lambda *_args, **_kw: None)  # disable boto3 usage
+
+    from app.routers import extract as extract_router
+
+    def fake_put_object(**kwargs):
+        put_called.update(kwargs)
+
+    monkeypatch.setattr(extract_router, "get_s3_client", lambda: type("C", (), {"put_object": fake_put_object})())
+
     result = svc.extract(b"dummy")
-    assert result.sheet_name == "fallback" 
+    assert result.sheet_name == "fallback"
+    assert "Body" in put_called 
