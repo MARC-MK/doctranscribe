@@ -9,7 +9,26 @@ services:
       - ./backend:/app/backend
     environment:
       - PYTHONUNBUFFERED=1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_REGION=us-east-1
+      - S3_ENDPOINT_URL=http://localstack:4566
     ports:
       - "8000:8000"
+    depends_on:
+      - localstack
 
   # Frontend service to be added on Day 4 
+
+  localstack:
+    image: localstack/localstack:3
+    environment:
+      - SERVICES=s3
+      - DEBUG=1
+    ports:
+      - "4566:4566"
+    volumes:
+      - localstack_data:/var/lib/localstack
+
+volumes:
+  localstack_data: 
