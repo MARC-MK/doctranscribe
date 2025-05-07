@@ -11,6 +11,10 @@ class Settings(BaseSettings):
 
     # Default OpenAI model – can be overridden per deployment
     openai_model: str = "gpt-4.1"
+    openai_api_key: Optional[str] = None  # Added to fix validation error
+    
+    # API configuration
+    api_port: Optional[int] = 8080  # Added to fix validation error
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

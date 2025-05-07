@@ -49,19 +49,95 @@ interface DocumentInfoCardProps {
 // Types for our document data
 interface Document {
   id: string;
-  name: string;
+  name?: string;
+  filename?: string;
   status: string;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
+  uploaded_at?: string;
+  total_pages?: number;
   latest_job?: {
     id: string;
     status: string;
+    pages_processed?: number;
+    total_pages?: number;
+    started_at?: string;
+    completed_at?: string;
+    model_name?: string;
   };
 }
 
 interface JobStatus {
   id: string;
   status: string;
+  pages_processed?: number;
+  total_pages?: number;
+  started_at?: string;
+  completed_at?: string;
+  model_name?: string;
+}
+
+interface ExtractedField {
+  label: string;
+  value: string;
+  field_type: string;
+  confidence: number;
+  is_handwritten: boolean;
+}
+
+interface DocumentSection {
+  title: string;
+  fields: ExtractedField[];
+}
+
+interface QuestionAnswer {
+  question: string;
+  answer: string;
+  page: number;
+  confidence: number;
+  is_handwritten: boolean;
+  notes?: string;
+}
+
+interface CheckboxField {
+  label: string;
+  options: string[];
+  selected: string;
+  confidence: number;
+  is_handwritten: boolean;
+}
+
+interface SignatureField {
+  label: string;
+  is_signed: boolean;
+  date?: string;
+  confidence: number;
+  position?: string;
+}
+
+interface ExtractedContent {
+  form_title?: string;
+  document_type?: string;
+  explanation_text?: string;
+  header?: { text: string; position: string };
+  overall_confidence?: number;
+  metadata?: Record<string, string>;
+  sections?: DocumentSection[];
+  questions?: QuestionAnswer[];
+  form_elements?: {
+    checkboxes?: CheckboxField[];
+    signatures?: SignatureField[];
+  };
+  notes?: string;
+  footer?: { text: string; position: string };
+}
+
+interface ExtractionResult {
+  id: string;
+  page_number: number;
+  content: ExtractedContent;
+  processing_time: number;
+  confidence_score: number;
 }
 
 // PDF Viewer Component that uses a direct URL to load PDFs
@@ -397,7 +473,8 @@ export default function DocumentView() {
     queryKey: ["document", documentId],
     queryFn: () => getDocument(documentId ?? ""),
     enabled: !!documentId,
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
+      const data = query.state.data as any;
       if (!data) return 1000;
       if (data.status === "processing" || data.latest_job?.status === "processing") {
         return 1000;
@@ -410,7 +487,8 @@ export default function DocumentView() {
     queryKey: ["job", documentQuery.data?.latest_job?.id],
     queryFn: () => documentQuery.data?.latest_job?.id ? getJobStatus(documentQuery.data.latest_job.id) : null,
     enabled: !!documentQuery.data?.latest_job?.id,
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
+      const data = query.state.data as any;
       if (data?.status === "processing") return 1000;
       return false;
     }
@@ -442,8 +520,8 @@ export default function DocumentView() {
     mutationFn: () => documentQuery.data?.latest_job?.id ? generateXLSX(documentQuery.data.latest_job.id) : Promise.resolve(null),
     onSuccess: (data) => {
       if (data) {
-        toast.success("XLSX file generated");
-        setXlsxUrl(getXLSXDownloadURL(data.id));
+      toast.success("XLSX file generated");
+      setXlsxUrl(getXLSXDownloadURL(data.id));
       }
     },
     onError: (error) => {
@@ -465,7 +543,7 @@ export default function DocumentView() {
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
-  
+
   // Auto-redirect to results tab when processing completes
   useEffect(() => {
     if (isCompleted && currentTab === "overview") {
@@ -519,7 +597,7 @@ export default function DocumentView() {
     <div className="flex flex-col">
       {/* Header section with document title */}
       <div className="mb-6">
-        <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold">
             {document?.filename || "Document"}
           </h1>
@@ -570,9 +648,9 @@ export default function DocumentView() {
                 <FileSpreadsheet className="h-4 w-4 mr-2" />
                 Excel Preview
               </Button>
-            </div>
-          )}
-        </div>
+                    </div>
+                  )}
+                </div>
 
         <TabsContent value="overview">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -598,8 +676,8 @@ export default function DocumentView() {
               processMutation={processMutation}
               setCurrentTab={setCurrentTab}
             />
-          </div>
-
+                  </div>
+                  
           {/* PDF Viewer in Overview */}
           {totalPages > 0 && (
             <div className="mt-4 h-[500px]">
@@ -609,30 +687,30 @@ export default function DocumentView() {
                 onPageChange={handlePageChange}
                 documentId={documentId}
               />
-            </div>
-          )}
-        </TabsContent>
+                    </div>
+                  )}
+            </TabsContent>
 
         <TabsContent value="results">
-          {resultsQuery.isLoading ? (
-            <div className="text-center py-10">
+              {resultsQuery.isLoading ? (
+                <div className="text-center py-10">
               <div className="h-8 w-8 border-4 border-blue-300 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
-              <p>Loading extraction results...</p>
-            </div>
-          ) : resultsQuery.isError ? (
+                  <p>Loading extraction results...</p>
+                </div>
+              ) : resultsQuery.isError ? (
             <Card className="p-6 text-center bg-gray-900 border-gray-800">
               <AlertCircleIcon className="h-8 w-8 text-red-500 mx-auto mb-2" />
-              <h3 className="text-lg font-medium mb-1">Error Loading Results</h3>
+                  <h3 className="text-lg font-medium mb-1">Error Loading Results</h3>
               <p className="text-sm text-gray-400 mb-4">We encountered an error while retrieving the extraction results.</p>
-              <Button 
-                variant="secondary" 
-                size="sm" 
-                onClick={() => resultsQuery.refetch()}
-              >
-                Try Again
-              </Button>
-            </Card>
-          ) : (
+                  <Button 
+                    variant="secondary" 
+                    size="sm" 
+                    onClick={() => resultsQuery.refetch()}
+                  >
+                    Try Again
+                  </Button>
+                </Card>
+              ) : (
             <div className="grid grid-cols-12 gap-4">
               {/* Left Panel: PDF Preview (3 columns) */}
               <div className="col-span-3 h-[calc(100vh-220px)]">
@@ -647,235 +725,381 @@ export default function DocumentView() {
               {/* Right Panel: Excel-like Data (9 columns) */}
               <div className="col-span-9">
                 <Card className="bg-white border border-gray-200 h-[calc(100vh-220px)] overflow-auto shadow-lg">
-                  {resultsQuery.data?.length > 0 ? (
-                    resultsQuery.data.map((result) => (
-                      <div key={result.id}>
-                        {result.content && typeof result.content === 'object' && (
-                          <div>
-                            {/* Form Title */}
-                            {result.content.form_title && (
-                              <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-3 flex justify-between items-center">
-                                <h2 className="text-xl font-semibold text-gray-800">{result.content.form_title}</h2>
-                                <div className="flex items-center gap-2">
-                                  {result.content.overall_confidence && (
-                                    <div className={`px-3 py-1 rounded-full text-sm ${
-                                      result.content.overall_confidence >= 0.92 
-                                        ? "bg-green-100 text-green-800" 
-                                        : result.content.overall_confidence >= 0.75 
-                                          ? "bg-amber-100 text-amber-800" 
-                                          : "bg-red-100 text-red-800"
-                                    }`}>
-                                      Confidence: {Math.round(result.content.overall_confidence * 100)}% 
-                                      {result.content.overall_confidence < 0.92 && " (fine-tuning)"}
-                                    </div>
-                                  )}
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm"
-                                    onClick={() => {
-                                      navigator.clipboard.writeText(JSON.stringify(result.content, null, 2));
-                                      toast.success("JSON copied to clipboard");
-                                    }}
-                                    className="text-gray-600 hover:text-gray-800 hover:bg-gray-100"
-                                  >
-                                    <Copy className="h-4 w-4 mr-1" />
-                                    Copy JSON
-                                  </Button>
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    onClick={() => xlsxMutation.mutate()}
-                                    className="border-gray-300 hover:bg-gray-50 text-gray-700"
-                                  >
-                                    <FileSpreadsheet className="h-4 w-4 mr-1" />
-                                    Export
-                                  </Button>
-                                </div>
-                              </div>
-                            )}
-                            
-                            {/* Explanatory Text */}
-                            {result.content.explanation_text && (
-                              <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-                                <p className="text-gray-700 whitespace-pre-line">{result.content.explanation_text}</p>
-                              </div>
-                            )}
-                            
-                            {/* Questions and Answers in Excel-like format */}
-                            {result.content.questions && Array.isArray(result.content.questions) && (
-                              <div className="p-0">
-                                <table className="w-full border-collapse">
-                                  <thead>
-                                    <tr>
-                                      <th className="w-12 p-3 text-center text-sm font-semibold text-gray-700 bg-gray-100 border border-gray-300">#</th>
-                                      <th className="p-3 text-left text-sm font-semibold text-gray-700 bg-gray-100 border border-gray-300">Question</th>
-                                      <th className="p-3 text-left text-sm font-semibold text-gray-700 bg-gray-100 border border-gray-300">Answer</th>
+                  {resultsQuery.data && Array.isArray(resultsQuery.data) && resultsQuery.data.length > 0 && resultsQuery.data[0]?.content && (
+                    <div className="w-full">
+                      {/* Document Title and Copy/Export buttons */}
+                      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-3 flex justify-between items-center">
+                        <h2 className="text-xl font-semibold text-gray-800">
+                          {resultsQuery.data[0].content.form_title || "Document Results"}
+                          {resultsQuery.data[0].content.document_type && (
+                            <span className="ml-2 text-sm font-normal text-gray-500">
+                              ({resultsQuery.data[0].content.document_type})
+                            </span>
+                          )}
+                        </h2>
+
+                        <div className="flex items-center gap-2">
+                          {resultsQuery.data[0].content.overall_confidence !== undefined && (
+                            <div className={`px-3 py-1 rounded-full text-sm ${
+                              resultsQuery.data[0].content.overall_confidence >= 0.92 
+                                ? "bg-green-100 text-green-800" 
+                                : resultsQuery.data[0].content.overall_confidence >= 0.75 
+                                  ? "bg-amber-100 text-amber-800" 
+                                  : "bg-red-100 text-red-800"
+                            }`}>
+                              Confidence: {Math.round(resultsQuery.data[0].content.overall_confidence * 100)}% 
+                            </div>
+                          )}
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => {
+                              if (resultsQuery.data && resultsQuery.data.length > 0) {
+                                navigator.clipboard.writeText(JSON.stringify(resultsQuery.data[0].content, null, 2));
+                                toast.success("JSON copied to clipboard");
+                              }
+                            }}
+                            className="text-gray-600 hover:text-gray-800 hover:bg-gray-100"
+                          >
+                            <Copy className="h-4 w-4 mr-1" />
+                            Copy JSON
+                          </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => xlsxMutation.mutate()}
+                            className="border-gray-300 hover:bg-gray-50 text-gray-700"
+                          >
+                            <FileSpreadsheet className="h-4 w-4 mr-1" />
+                            Export
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Document Header */}
+                      {resultsQuery.data[0].content.header && (
+                        <div className="px-4 py-2 bg-gray-50 border-b border-gray-200">
+                          <div className="font-medium text-sm text-gray-600">HEADER</div>
+                          <div className="text-gray-800">{resultsQuery.data[0].content.header.text}</div>
+                        </div>
+                      )}
+
+                      {/* Document Description/Explanation */}
+                      {resultsQuery.data[0].content.explanation_text && (
+                        <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
+                          <p className="text-gray-700 whitespace-pre-line">{resultsQuery.data[0].content.explanation_text}</p>
+                  </div>
+                      )}
+
+                      {/* Document Metadata */}
+                      {resultsQuery.data[0].content.metadata && (
+                        <div className="px-4 py-2 bg-gray-50/50 border-b border-gray-200">
+                          <details className="group">
+                            <summary className="cursor-pointer text-sm font-medium text-gray-700 flex items-center">
+                              <ChevronDownIcon className="h-4 w-4 mr-1 group-open:rotate-180 transition-transform" />
+                              Document Metadata
+                            </summary>
+                            <div className="mt-2 pl-5 text-sm">
+                              <table className="w-full max-w-lg text-sm">
+                                <tbody>
+                                  {Object.entries(resultsQuery.data[0].content.metadata).map(([key, value]) => (
+                                    <tr key={key} className="border-b border-gray-100">
+                                      <td className="py-1 font-medium text-gray-700 capitalize">{key.replace(/_/g, ' ')}</td>
+                                      <td className="py-1 text-gray-800">{String(value)}</td>
                                     </tr>
-                                  </thead>
-                                  <tbody>
-                                    {result.content.questions.map((item, idx) => {
-                                      // Extract question number from string if it exists
-                                      const questionMatch = item.question?.match(/^(\d+)\.\s/);
-                                      const questionNumber = questionMatch ? parseInt(questionMatch[1]) : idx + 1;
-                                      
-                                      return (
+                                  ))}
+                                </tbody>
+                              </table>
+                    </div>
+                          </details>
+                          </div>
+                      )}
+
+                      {/* Document Sections */}
+                      {resultsQuery.data && resultsQuery.data.length > 0 && resultsQuery.data[0].content.sections && resultsQuery.data[0].content.sections.length > 0 && (
+                        <div className="mt-4">
+                          {resultsQuery.data[0].content.sections.map((section: DocumentSection, sectionIdx: number) => (
+                            <div key={sectionIdx} className="mb-6 border border-gray-200 rounded-md overflow-hidden">
+                              <div className="bg-gray-100 px-4 py-2 font-medium text-gray-800">
+                                {section.title || `Section ${sectionIdx + 1}`}
+                                  </div>
+                              
+                              {section.fields && section.fields.length > 0 && (
+                                <div className="px-2 py-2">
+                                  <table className="w-full border-collapse">
+                                    <thead className="bg-gray-50">
+                                      <tr>
+                                        <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Field</th>
+                                        <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Value</th>
+                                        <th className="px-3 py-2 text-center text-xs font-semibold text-gray-600 w-20">Confidence</th>
+                                        <th className="px-3 py-2 text-center text-xs font-semibold text-gray-600 w-24">Type</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-200">
+                                      {section.fields.map((field: ExtractedField, fieldIdx: number) => (
                                         <tr 
-                                          key={idx} 
-                                          className={`border-b border-gray-300 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-blue-50 transition-colors duration-150`}
+                                          key={fieldIdx} 
+                                          className={fieldIdx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
                                         >
-                                          <td className="p-3 text-center border-r border-gray-300 text-gray-700">
-                                            <div className="flex items-center justify-center">
-                                              <div className="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 font-medium text-sm">
-                                                {questionNumber}
-                                              </div>
-                                            </div>
+                                          <td className="px-3 py-2 text-sm text-gray-900 font-medium">{field.label}</td>
+                                          <td className="px-3 py-2 text-sm text-gray-700 whitespace-pre-line">
+                                            {field.value || <span className="text-gray-400 italic">Empty</span>}
                                           </td>
-                                          <td className="p-3 text-gray-800 border-r border-gray-300">
-                                            <div className="font-medium">
-                                              {item.question}
-                                            </div>
-                                            {item.notes && (
-                                              <div className="text-sm text-gray-500 mt-1">{item.notes}</div>
-                                            )}
+                                          <td className="px-3 py-2 text-xs text-center">
+                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full ${
+                                              field.confidence >= 0.92 
+                                                ? "bg-green-100 text-green-800" 
+                                                : field.confidence >= 0.75 
+                                                  ? "bg-amber-100 text-amber-800" 
+                                                  : "bg-red-100 text-red-800"
+                                            }`}>
+                                              {Math.round(field.confidence * 100)}%
+                                            </span>
                                           </td>
-                                          <td className="p-3 text-gray-700 border-r border-gray-300">
-                                            {(item.answer && item.answer !== "No answer provided" && String(item.answer).trim() !== "") ? (
-                                              <span className="whitespace-pre-line text-gray-700">{item.answer}</span>
-                                            ) : (
-                                              <span className="text-gray-400 italic">No answer provided</span>
-                                            )}
-                                            {item.confidence && (
-                                              <div className={`flex items-center gap-1 mt-2 text-xs ${
-                                                item.confidence >= 0.92 
-                                                  ? "text-green-600" 
-                                                  : item.confidence >= 0.75 
-                                                    ? "text-amber-600" 
-                                                    : "text-red-600"
-                                              }`}>
-                                                {item.confidence < 0.92 && <AlertTriangle className="h-3 w-3" />}
-                                                <span>
-                                                  Confidence: {Math.round(item.confidence * 100)}%
-                                                  {item.confidence < 0.92 && " (below target)"}
-                                                </span>
-                                              </div>
-                                            )}
+                                          <td className="px-3 py-2 text-xs text-center">
+                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full ${
+                                              field.is_handwritten 
+                                                ? "bg-blue-100 text-blue-800" 
+                                                : "bg-gray-100 text-gray-800"
+                                            }`}>
+                                              {field.is_handwritten ? "Handwritten" : "Printed"}
+                                            </span>
                                           </td>
                                         </tr>
-                                      );
-                                    })}
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Questions & Answers */}
+                      {resultsQuery.data[0].content.questions && resultsQuery.data[0].content.questions.length > 0 && (
+                        <div className="mt-4 border border-gray-200 rounded-md overflow-hidden">
+                          <div className="bg-gray-100 px-4 py-2 font-medium text-gray-800">
+                            Questions & Answers
+                          </div>
+                          <table className="w-full border-collapse">
+                            <thead>
+                              <tr className="bg-gray-50">
+                                <th className="w-12 p-3 text-center text-sm font-semibold text-gray-700 border border-gray-300">#</th>
+                                <th className="p-3 text-left text-sm font-semibold text-gray-700 border border-gray-300">Question</th>
+                                <th className="p-3 text-left text-sm font-semibold text-gray-700 border border-gray-300">Answer</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {resultsQuery.data[0].content.questions.map((item: QuestionAnswer, idx: number) => {
+                                // Extract question number from string if it exists
+                                const questionMatch = item.question?.match(/^(\d+)\.\s/);
+                                const questionNumber = questionMatch ? parseInt(questionMatch[1]) : idx + 1;
+                                
+                                return (
+                                  <tr 
+                                    key={idx} 
+                                    className={`border-b border-gray-300 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-blue-50 transition-colors duration-150`}
+                                  >
+                                    <td className="p-3 text-center border-r border-gray-300 text-gray-700">
+                                      <div className="flex items-center justify-center">
+                                        <div className="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 font-medium text-sm">
+                                          {questionNumber}
+                                        </div>
+                                      </div>
+                                    </td>
+                                    <td className="p-3 text-gray-800 border-r border-gray-300">
+                                      <div className="font-medium flex items-start">
+                                        {item.question}
+                                        {item.is_handwritten !== undefined && (
+                                          <span className={`ml-2 inline-flex items-center px-1.5 py-0.5 rounded-full text-xs ${
+                                            item.is_handwritten ? "bg-blue-100 text-blue-800" : "bg-gray-100 text-gray-800"
+                                          }`}>
+                                            {item.is_handwritten ? "Handwritten" : "Printed"}
+                                          </span>
+                                        )}
+                                      </div>
+                                      {item.notes && (
+                                        <div className="text-sm text-gray-500 mt-1">{item.notes}</div>
+                                      )}
+                                    </td>
+                                    <td className="p-3 text-gray-700 border-r border-gray-300">
+                                      {(item.answer && item.answer !== "No answer provided" && String(item.answer).trim() !== "") ? (
+                                        <span className="whitespace-pre-line text-gray-700">{item.answer}</span>
+                                      ) : (
+                                        <span className="text-gray-400 italic">No answer provided</span>
+                                      )}
+                                      {item.confidence && (
+                                        <div className={`flex items-center gap-1 mt-2 text-xs ${
+                                          item.confidence >= 0.92 
+                                            ? "text-green-600" 
+                                            : item.confidence >= 0.75 
+                                              ? "text-amber-600" 
+                                              : "text-red-600"
+                                        }`}>
+                                          {item.confidence < 0.92 && <AlertTriangle className="h-3 w-3" />}
+                                          <span>
+                                            Confidence: {Math.round(item.confidence * 100)}%
+                                            {item.confidence < 0.92 && " (below target)"}
+                                          </span>
+                                        </div>
+                                      )}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+
+                      {/* Form Elements */}
+                      {resultsQuery.data[0].content.form_elements && (
+                        <div className="mt-4">
+                          {/* Checkboxes */}
+                          {resultsQuery.data[0].content.form_elements.checkboxes && 
+                           resultsQuery.data[0].content.form_elements.checkboxes.length > 0 && (
+                            <div className="mb-4 border border-gray-200 rounded-md overflow-hidden">
+                              <div className="bg-gray-100 px-4 py-2 font-medium text-gray-800">
+                                Checkboxes & Options
+                              </div>
+                              <div className="px-2 py-2">
+                                <table className="w-full border-collapse">
+                                  <thead className="bg-gray-50">
+                                    <tr>
+                                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Field</th>
+                                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Options</th>
+                                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Selected</th>
+                                      <th className="px-3 py-2 text-center text-xs font-semibold text-gray-600 w-20">Confidence</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-gray-200">
+                                    {resultsQuery.data[0].content.form_elements.checkboxes.map((checkbox: CheckboxField, idx) => (
+                                      <tr 
+                                        key={idx} 
+                                        className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
+                                      >
+                                        <td className="px-3 py-2 text-sm text-gray-900 font-medium">{checkbox.label}</td>
+                                        <td className="px-3 py-2 text-sm text-gray-700">
+                                          {checkbox.options && checkbox.options.map((option: string, i) => (
+                                            <span key={i} className="inline-block mx-1 px-2 py-0.5 bg-gray-100 rounded text-xs">
+                                              {option}
+                                            </span>
+                                          ))}
+                                        </td>
+                                        <td className="px-3 py-2 text-sm font-medium text-blue-700">
+                                          {checkbox.selected || <span className="text-gray-400 italic">None</span>}
+                                        </td>
+                                        <td className="px-3 py-2 text-xs text-center">
+                                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full ${
+                                            checkbox.confidence >= 0.92 
+                                              ? "bg-green-100 text-green-800" 
+                                              : checkbox.confidence >= 0.75 
+                                                ? "bg-amber-100 text-amber-800" 
+                                                : "bg-red-100 text-red-800"
+                                          }`}>
+                                            {Math.round(checkbox.confidence * 100)}%
+                                          </span>
+                                        </td>
+                                      </tr>
+                                    ))}
                                   </tbody>
                                 </table>
                               </div>
-                            )}
-                            
-                            {/* Display other structured data from the content */}
-                            {Object.entries(result.content)
-                              .filter(([key]) => !['form_title', 'explanation_text', 'questions'].includes(key) && typeof result.content[key] !== 'function')
-                              .map(([key, value]) => {
-                                if (Array.isArray(value) && value.length > 0) {
-                                  return (
-                                    <div key={key} className="mt-6 px-4 pb-4">
-                                      <h3 className="text-lg font-medium mb-3 text-gray-800 capitalize">{key.replace(/_/g, ' ')}</h3>
-                                      <div className="border border-gray-300 rounded-md overflow-hidden">
-                                        <div className="overflow-x-auto">
-                                          <table className="w-full border-collapse">
-                                            <thead>
-                                              <tr className="bg-gray-100">
-                                                {typeof value[0] === 'object' ? (
-                                                  Object.keys(value[0]).map(colKey => (
-                                                    <th key={colKey} className="p-3 text-left text-sm font-semibold text-gray-700 border-b border-gray-300">
-                                                      {colKey.replace(/_/g, ' ')}
-                                                    </th>
-                                                  ))
-                                                ) : (
-                                                  <th className="p-3 text-left text-sm font-semibold text-gray-700 border-b border-gray-300">
-                                                    Value
-                                                  </th>
-                                                )}
-                                              </tr>
-                                            </thead>
-                                            <tbody>
-                                              {value.map((item, idx) => (
-                                                <tr 
-                                                  key={idx} 
-                                                  className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-blue-50`}
-                                                >
-                                                  {typeof item === 'object' ? (
-                                                    Object.values(item).map((val, valIdx) => (
-                                                      <td key={valIdx} className="p-3 text-sm text-gray-700 border-b border-gray-300">
-                                                        {val === null ? '-' : String(val)}
-                                                      </td>
-                                                    ))
-                                                  ) : (
-                                                    <td className="p-3 text-sm text-gray-700 border-b border-gray-300">
-                                                      {item === null ? '-' : String(item)}
-                                                    </td>
-                                                  )}
-                                                </tr>
-                                              ))}
-                                            </tbody>
-                                          </table>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  );
-                                } else if (typeof value === 'object' && value !== null) {
-                                  return (
-                                    <div key={key} className="mt-6 px-4 pb-4">
-                                      <h3 className="text-lg font-medium mb-3 text-gray-800 capitalize">{key.replace(/_/g, ' ')}</h3>
-                                      <div className="bg-white border border-gray-300 rounded-md p-4">
-                                        <div className="space-y-2">
-                                          {Object.entries(value).map(([subKey, subVal]) => (
-                                            <div key={subKey} className="flex justify-between items-center border-b border-gray-200 pb-2">
-                                              <div className="text-gray-700 font-medium">{subKey.replace(/_/g, ' ')}</div>
-                                              <div className="text-gray-600">{subVal === null ? '-' : String(subVal)}</div>
-                                            </div>
-                                          ))}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  );
-                                }
-                                return null;
-                              })}
-                          </div>
-                        )}
-                      </div>
-                    ))
-                  ) : (
-                    <div className="flex flex-col items-center justify-center h-full">
-                      <FileTextIcon className="h-16 w-16 text-red-500 mb-4" />
-                      <h3 className="text-xl font-semibold text-gray-800 mb-2">No Extraction Results</h3>
-                      <p className="text-gray-600 max-w-md text-center mb-6">
-                        The document hasn't been successfully processed. Please start or restart processing to extract the handwritten text.
-                      </p>
-                      <Button 
-                        onClick={() => processMutation.mutate()}
-                        disabled={processMutation.isPending}
-                        className="bg-blue-600 hover:bg-blue-700"
-                      >
-                        {processMutation.isPending ? (
-                          <RefreshCwIcon className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                          <RefreshCwIcon className="mr-2 h-4 w-4" />
-                        )}
-                        Process Document
-                      </Button>
+                            </div>
+                          )}
+
+                          {/* Signatures */}
+                          {resultsQuery.data[0].content.form_elements.signatures && 
+                           resultsQuery.data[0].content.form_elements.signatures.length > 0 && (
+                            <div className="mb-4 border border-gray-200 rounded-md overflow-hidden">
+                              <div className="bg-gray-100 px-4 py-2 font-medium text-gray-800">
+                                Signatures
+                              </div>
+                              <div className="px-2 py-2">
+                                <table className="w-full border-collapse">
+                                  <thead className="bg-gray-50">
+                                    <tr>
+                                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Label</th>
+                                      <th className="px-3 py-2 text-center text-xs font-semibold text-gray-600">Signed</th>
+                                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Date</th>
+                                      <th className="px-3 py-2 text-center text-xs font-semibold text-gray-600 w-24">Confidence</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-gray-200">
+                                    {resultsQuery.data[0].content.form_elements.signatures.map((sig: SignatureField, idx) => (
+                                      <tr 
+                                        key={idx} 
+                                        className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
+                                      >
+                                        <td className="px-3 py-2 text-sm text-gray-900 font-medium">{sig.label}</td>
+                                        <td className="px-3 py-2 text-sm text-center">
+                                          {sig.is_signed ? (
+                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-green-100 text-green-800">
+                                              <CheckCircleIcon className="h-3 w-3 mr-1" />
+                                              Signed
+                                            </span>
+                                          ) : (
+                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-red-100 text-red-800">
+                                              <XIcon className="h-3 w-3 mr-1" />
+                                              Not Signed
+                                            </span>
+                                          )}
+                                        </td>
+                                        <td className="px-3 py-2 text-sm text-gray-700">
+                                          {sig.date || <span className="text-gray-400 italic">No date</span>}
+                                        </td>
+                                        <td className="px-3 py-2 text-xs text-center">
+                                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full ${
+                                            sig.confidence >= 0.92 
+                                              ? "bg-green-100 text-green-800" 
+                                              : sig.confidence >= 0.75 
+                                                ? "bg-amber-100 text-amber-800" 
+                                                : "bg-red-100 text-red-800"
+                                          }`}>
+                                            {Math.round(sig.confidence * 100)}%
+                                          </span>
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Notes */}
+                      {resultsQuery.data[0].content.notes && (
+                        <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+                          <h3 className="text-sm font-medium text-yellow-800 mb-1">Notes</h3>
+                          <p className="text-sm text-yellow-700">{resultsQuery.data[0].content.notes}</p>
+                        </div>
+                      )}
+
+                      {/* Footer */}
+                      {resultsQuery.data[0].content.footer && (
+                        <div className="mt-4 px-4 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-600">
+                          <div className="font-medium text-xs text-gray-500 mb-1">FOOTER</div>
+                          {resultsQuery.data[0].content.footer.text}
+                        </div>
+                      )}
                     </div>
                   )}
                 </Card>
               </div>
             </div>
-          )}
-        </TabsContent>
-      </Tabs>
+              )}
+            </TabsContent>
+          </Tabs>
       
       {/* XLSX Preview Dialog */}
       <Dialog open={showXlsxPreview} onOpenChange={setShowXlsxPreview}>
         <DialogContent className="max-w-6xl p-0 bg-transparent border-none">
-          {showXlsxPreview && (
+          {showXlsxPreview && documentQuery.data?.latest_job?.id && (
             <XLSXPreview 
-              jobId={documentQuery.data?.latest_job?.id} 
+              jobId={documentQuery.data.latest_job.id} 
               onClose={() => setShowXlsxPreview(false)} 
             />
           )}

@@ -50,4 +50,13 @@ dist/
 
 # Env files
 .env*
-!.env.example 
+!.env.example
+
+# Application-specific files
+uploads/
+backend/uploads/
+*.db
+doctranscribe.db
+backend.log
+test-backend.log
+excel_exports/ 

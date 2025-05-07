@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // Base API URL - can be configured via environment variables
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 console.log('Using API_BASE_URL:', API_BASE_URL);
 
@@ -159,12 +159,12 @@ export async function getJobResults(jobId: string): Promise<ExtractionResult[]> 
 }
 
 export async function generateXLSX(jobId: string): Promise<XLSXExport> {
-  const response = await apiClient.post(`/handwriting/jobs/${jobId}/xlsx`);
+  const response = await apiClient.post(`/handwriting/jobs/${jobId}/export`);
   return response.data;
 }
 
 export function getXLSXDownloadURL(exportId: string): string {
-  return `${API_BASE_URL}/handwriting/xlsx/${exportId}/download`;
+  return `${API_BASE_URL}/handwriting/exports/${exportId}/download`;
 }
 
 // Export all functions as an object
