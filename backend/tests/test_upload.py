@@ -7,6 +7,7 @@ from pathlib import Path
 import boto3
 import pytest
 from fastapi.testclient import TestClient
+import pathlib
 
 from app.main import app
 from app.config import settings as _settings
@@ -49,16 +50,32 @@ def test_upload_pdf(s3_client, monkeypatch):
 
     client = TestClient(app)
 
-    pdf_bytes = b"%PDF-1.4\n%\xE2\xE3\xCF\xD3\n1 0 obj\n<< /Type /Catalog >>\nendobj\n"
+    pdf_path = pathlib.Path(__file__).parent / "fixtures" / "mental_health_survey_v4.pdf"
+    with open(pdf_path, "rb") as f:
+        pdf_bytes = f.read()
+
     response = client.post(
         "/upload/",
-        files={"file": ("dummy.pdf", io.BytesIO(pdf_bytes), "application/pdf")},
+        files={"file": ("mental_health_survey_v4.pdf", io.BytesIO(pdf_bytes), "application/pdf")},
     )
+
+    print("RESPONSE:", response.status_code, response.text)
 
     assert response.status_code == 201
     data = response.json()
-    asserted_key = data["key"]
 
-    # Ensure object exists in S3
-    objects = s3_client.list_objects_v2(Bucket=_settings.s3_bucket, Prefix=asserted_key)
-    assert objects["KeyCount"] == 1 
+    # Ensure PDF metadata is present
+    assert data["filename"] == "mental_health_survey_v4.pdf"
+    assert data["filesize_bytes"] == len(pdf_bytes)
+    assert data["page_count"] == 1  # This PDF has 1 page
+    assert "mental_health_survey_v4.pdf" in data["summary"]
+    assert "1 pages" in data["summary"]
+
+    # Ensure object exists in S3 (by filename suffix)
+    objects = s3_client.list_objects_v2(Bucket=_settings.s3_bucket)
+    found = False
+    for obj in objects.get("Contents", []):
+        if obj["Key"].endswith("mental_health_survey_v4.pdf"):
+            found = True
+            break
+    assert found, "Uploaded PDF not found in S3 bucket" 

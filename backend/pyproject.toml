@@ -16,6 +16,11 @@ openai = "^1.31.1"
 pandas = "^2.2.2"
 openpyxl = "^3.1.2"
 scikit-learn = "^1.4.2"
+pypdf2 = "^3.0.1"
+sqlmodel = "^0.0.24"
+xlsxwriter = "^3.2.0"
+python-jose = "^3.3.0"
+passlib = "^1.7.4"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.4.3"

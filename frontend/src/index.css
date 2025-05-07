@@ -6,4 +6,33 @@
   html {
     @apply scroll-smooth;
   }
+  
+  /* Default dark mode styles */
+  :root {
+    --background: #0f172a;
+    --background-light: #1e293b;
+    --text-primary: #ffffff;
+    --text-secondary: #94a3b8;
+    --primary: #7dd3fc;
+    --primary-dark: #0284c7;
+    --accent: #a78bfa;
+    --border-color: #1e293b;
+  }
+  
+  /* Light mode styles */
+  .light {
+    --background: #f8fafc;
+    --background-light: #e2e8f0;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --primary: #0284c7;
+    --primary-dark: #0369a1;
+    --accent: #8b5cf6;
+    --border-color: #e2e8f0;
+  }
+  
+  body {
+    @apply bg-[var(--background)] text-[var(--text-primary)];
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
 } 

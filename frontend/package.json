@@ -9,16 +9,26 @@
     "lint": "eslint src --ext .tsx,.ts --max-warnings=0"
   },
   "dependencies": {
+    "@radix-ui/react-dialog": "^1.1.12",
+    "@radix-ui/react-progress": "^1.1.6",
+    "@radix-ui/react-tabs": "^1.1.11",
+    "@radix-ui/react-toast": "^1.2.13",
     "@tanstack/react-query": "^5.27.0",
     "axios": "^1.6.8",
+    "framer-motion": "^12.9.7",
     "lucide-react": "^0.364.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-dropzone": "^14.2.3"
+    "react-dropzone": "^14.2.3",
+    "react-pdf": "^9.2.1",
+    "react-router-dom": "^6.23.0",
+    "sonner": "^2.0.3",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/react": "^18.2.37",
     "@types/react-dom": "^18.2.15",
+    "@types/react-router-dom": "^5.3.3",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.17",
     "eslint": "^8.57.0",
@@ -26,6 +36,7 @@
     "postcss": "^8.4.34",
     "tailwindcss": "^3.4.4",
     "typescript": "^5.4.3",
-    "vite": "^5.2.0"
+    "vite": "^5.2.0",
+    "vite-tsconfig-paths": "^4.3.2"
   }
-} 
+}
