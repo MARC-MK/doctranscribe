@@ -1,8 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status
-from typing import List, Dict, Any, Optional
+from fastapi import APIRouter, HTTPException, Request, status
+from typing import List
 from pydantic import BaseModel
 import uuid
-from datetime import datetime
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 

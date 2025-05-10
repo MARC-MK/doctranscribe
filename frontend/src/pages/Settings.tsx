@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { Settings as SettingsIcon, Save, Image, Eye, FileText, AlertCircle } from "lucide-react";
+import {
+  Settings as SettingsIcon,
+  Save,
+  Image,
+  Eye,
+  FileText,
+  AlertCircle,
+} from "lucide-react";
 
 const SettingsPage = () => {
   const [settings, setSettings] = useState({
@@ -9,14 +16,14 @@ const SettingsPage = () => {
     emailNotifications: true,
     theme: "dark",
     ocrEngine: "standard",
-    processInBackground: true
+    processInBackground: true,
   });
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setSettings({
       ...settings,
-      [name]: type === "checkbox" ? checked : value
+      [name]: type === "checkbox" ? checked : value,
     });
   };
 
@@ -43,12 +50,14 @@ const SettingsPage = () => {
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <Eye className="text-primary" size={20} /> OCR & AI Settings
           </h2>
-          
+
           <div className="space-y-4">
             <div>
               <label className="flex justify-between mb-2">
                 <span>OCR Confidence Threshold</span>
-                <span className="text-primary">{settings.confidenceThreshold}%</span>
+                <span className="text-primary">
+                  {settings.confidenceThreshold}%
+                </span>
               </label>
               <input
                 type="range"
@@ -63,7 +72,7 @@ const SettingsPage = () => {
                 Responses below this confidence level will be flagged for review
               </p>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block mb-2">OCR Engine</label>
@@ -73,12 +82,18 @@ const SettingsPage = () => {
                   onChange={handleChange}
                   className="w-full bg-background-light border border-background-light rounded p-2"
                 >
-                  <option value="standard">Standard (Faster, Good Accuracy)</option>
-                  <option value="enhanced">Enhanced (Slower, Higher Accuracy)</option>
-                  <option value="premium">Premium (Best for Difficult Handwriting)</option>
+                  <option value="standard">
+                    Standard (Faster, Good Accuracy)
+                  </option>
+                  <option value="enhanced">
+                    Enhanced (Slower, Higher Accuracy)
+                  </option>
+                  <option value="premium">
+                    Premium (Best for Difficult Handwriting)
+                  </option>
                 </select>
               </div>
-              
+
               <div className="flex items-center">
                 <input
                   type="checkbox"
@@ -95,13 +110,13 @@ const SettingsPage = () => {
             </div>
           </div>
         </section>
-        
+
         {/* Data Storage Settings */}
         <section className="bg-background rounded-lg border border-background-light p-6">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <FileText className="text-primary" size={20} /> Data & Storage
           </h2>
-          
+
           <div className="space-y-4">
             <div>
               <label className="block mb-2">Data Retention Period</label>
@@ -121,7 +136,7 @@ const SettingsPage = () => {
                 How long to keep your processed files on our servers
               </p>
             </div>
-            
+
             <div className="flex items-center">
               <input
                 type="checkbox"
@@ -137,13 +152,13 @@ const SettingsPage = () => {
             </div>
           </div>
         </section>
-        
+
         {/* Notification Settings */}
         <section className="bg-background rounded-lg border border-background-light p-6">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <AlertCircle className="text-primary" size={20} /> Notifications
           </h2>
-          
+
           <div className="flex items-center">
             <input
               type="checkbox"
@@ -158,13 +173,13 @@ const SettingsPage = () => {
             </label>
           </div>
         </section>
-        
+
         {/* Theme Settings */}
         <section className="bg-background rounded-lg border border-background-light p-6">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <Image className="text-primary" size={20} /> Appearance
           </h2>
-          
+
           <div>
             <label className="block mb-2">Theme</label>
             <div className="flex gap-4">
@@ -204,10 +219,10 @@ const SettingsPage = () => {
             </div>
           </div>
         </section>
-        
+
         <div className="flex justify-end">
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="px-6 py-3 bg-primary text-white rounded-lg flex items-center gap-2 hover:bg-primary/90 transition"
           >
             <Save size={18} /> Save Settings
@@ -218,4 +233,4 @@ const SettingsPage = () => {
   );
 };
 
-export default SettingsPage; 
+export default SettingsPage;

@@ -13,18 +13,21 @@ interface JobStatus {
 }
 
 export const JobStatusBar: React.FC<JobStatusBarProps> = ({ jobId }) => {
-  const [status, setStatus] = useState<JobStatus>({ status: "queued", progress: 0 });
-  const [ws, setWs] = useState<WebSocket | null>(null);
+  const [status, setStatus] = useState<JobStatus>({
+    status: "queued",
+    progress: 0,
+  });
 
   useEffect(() => {
     const wsUrl = `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}/results/ws/jobs/${jobId}`;
     const socket = new WebSocket(wsUrl);
-    setWs(socket);
     socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
         setStatus(data);
-      } catch {}
+      } catch (err) {
+        console.error("Error parsing WebSocket message:", err);
+      }
     };
     return () => {
       socket.close();
@@ -32,26 +35,32 @@ export const JobStatusBar: React.FC<JobStatusBarProps> = ({ jobId }) => {
   }, [jobId]);
 
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-4">
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="mb-4"
+    >
       <div className="flex items-center gap-4">
         <span className="font-medium text-base">
           {status.status === "done"
             ? "✅ Complete"
             : status.status === "error"
-            ? "❌ Error"
-            : status.status === "processing"
-            ? `Processing (${status.progress}%)`
-            : "Queued"}
+              ? "❌ Error"
+              : status.status === "processing"
+                ? `Processing (${status.progress}%)`
+                : "Queued"}
         </span>
         <div className="flex-1">
           <Progress value={status.progress} max={100} className="h-2" />
         </div>
       </div>
       {status.message && (
-        <div className="text-muted-foreground text-xs mt-1">{status.message}</div>
+        <div className="text-muted-foreground text-xs mt-1">
+          {status.message}
+        </div>
       )}
     </motion.div>
   );
 };
 
-export default JobStatusBar; 
+export default JobStatusBar;

@@ -1,9 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, WebSocket, WebSocketDisconnect, status
-from typing import List, Dict, Any, Optional
-import json
-from ..deps import get_s3_client
-from ..config import settings
-import openai
+from fastapi import APIRouter, HTTPException, Request, WebSocket, WebSocketDisconnect, status
+from typing import List, Dict
 import os
 from pydantic import BaseModel
 

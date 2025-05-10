@@ -15,7 +15,7 @@ services:
       - AWS_REGION=${AWS_REGION}
       - S3_ENDPOINT_URL=http://localstack:4566
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4.1}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4.1-2025-04-14}
     ports:
       - "8080:8080"
     depends_on:

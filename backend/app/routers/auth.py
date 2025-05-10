@@ -2,8 +2,7 @@
 Authentication router for DocTranscribe.
 """
 import logging
-from datetime import timedelta
-from typing import Dict, List, Optional
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm

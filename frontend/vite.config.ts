@@ -4,7 +4,8 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import path from "path";
 
 // Get environment variables or use defaults
-const backendUrl = process.env.VITE_API_URL || 'http://localhost:8000';
+// Use port 8080 for consistency with Docker setup
+const backendUrl = process.env.VITE_API_URL || 'http://localhost:8080';
 console.log('Backend URL:', backendUrl);
 
 export default defineConfig({

@@ -1,6 +1,6 @@
 from io import BytesIO
 import base64
-from typing import Dict, Any, List
+from typing import Dict, Any
 
 import pandas as pd
 from openpyxl.styles import PatternFill, Border, Side, Alignment, Font

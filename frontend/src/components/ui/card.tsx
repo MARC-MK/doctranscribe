@@ -1,8 +1,10 @@
-import React from 'react';
+import React from "react";
 
-interface CardProps extends React.HTMLAttributes<HTMLDivElement> {}
+export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  className?: string;
+}
 
-export function Card({ className = '', children, ...props }: CardProps) {
+export function Card({ className = "", children, ...props }: CardProps) {
   return (
     <div
       className={`rounded-lg border border-gray-700 bg-gray-900 shadow-sm ${className}`}
@@ -13,4 +15,4 @@ export function Card({ className = '', children, ...props }: CardProps) {
   );
 }
 
-export default Card; 
+export default Card;

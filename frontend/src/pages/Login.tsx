@@ -1,3 +1,4 @@
+import React from "react";
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
@@ -34,11 +35,12 @@ export default function Login() {
       toast.success("Login successful!");
       navigate("/");
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error("Login error:", error);
-      const errorMessage = error?.response?.data?.detail || 
-                          error?.message || 
-                          "Invalid credentials";
+      const errorMessage =
+        error?.response?.data?.detail ||
+        error?.message ||
+        "Invalid credentials";
       toast.error(`Login failed: ${errorMessage}`);
     },
   });
@@ -79,7 +81,7 @@ export default function Login() {
               <MailIcon className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <label htmlFor="password" className="text-sm font-medium">
               Password
@@ -126,7 +128,7 @@ export default function Login() {
             </Link>
           </p>
         </div>
-        
+
         <div className="mt-8 border-t border-gray-700 pt-6">
           <p className="text-sm text-gray-500 text-center">
             Demo credentials: admin@doctranscribe.com / adminpassword
@@ -135,4 +137,4 @@ export default function Login() {
       </Card>
     </div>
   );
-} 
+}

@@ -1,0 +1,12 @@
+services:
+  backend:
+    environment:
+      # Put your actual API keys here for testing
+      - AWS_ACCESS_KEY_ID=AKIAQG5ED7HVSJZV5UK7
+      - AWS_SECRET_ACCESS_KEY=2C9B9KKIZ5Qeddi8SpeUOi6XnB4K51XdEOGIzyN
+      - OPENAI_API_KEY=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
+      - OPENAI_MODEL=gpt-4.1
+    volumes:
+      - ./uploads:/app/uploads
+      - ./error_pdfs:/app/error_pdfs
+      - ./excel_exports:/app/excel_exports

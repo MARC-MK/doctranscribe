@@ -1,3 +1,4 @@
+import React from "react";
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
@@ -7,7 +8,13 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { register } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import { EyeIcon, EyeOffIcon, LockIcon, MailIcon, UserIcon } from "lucide-react";
+import {
+  EyeIcon,
+  EyeOffIcon,
+  LockIcon,
+  MailIcon,
+  UserIcon,
+} from "lucide-react";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -19,7 +26,11 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
 
   const registerMutation = useMutation({
-    mutationFn: (userData: { name: string; email: string; password: string }) => {
+    mutationFn: (userData: {
+      name: string;
+      email: string;
+      password: string;
+    }) => {
       return register(userData.email, userData.password, userData.name);
     },
     onSuccess: (data) => {
@@ -28,29 +39,31 @@ export default function Register() {
       navigate("/");
     },
     onError: (error) => {
-      toast.error(`Registration failed: ${error instanceof Error ? error.message : "An error occurred"}`);
+      toast.error(
+        `Registration failed: ${error instanceof Error ? error.message : "An error occurred"}`,
+      );
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validation
     if (!name || !email || !password || !confirmPassword) {
       toast.error("Please fill in all fields");
       return;
     }
-    
+
     if (password !== confirmPassword) {
       toast.error("Passwords do not match");
       return;
     }
-    
+
     if (password.length < 8) {
       toast.error("Password must be at least 8 characters long");
       return;
     }
-    
+
     registerMutation.mutate({ name, email, password });
   };
 
@@ -59,7 +72,9 @@ export default function Register() {
       <Card className="p-8 w-full max-w-md">
         <div className="text-center mb-6">
           <h1 className="text-2xl font-bold">Create an Account</h1>
-          <p className="text-gray-500 mt-2">Join DocTranscribe to start extracting handwritten data</p>
+          <p className="text-gray-500 mt-2">
+            Join DocTranscribe to start extracting handwritten data
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -80,7 +95,7 @@ export default function Register() {
               <UserIcon className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <label htmlFor="email" className="text-sm font-medium">
               Email Address
@@ -98,7 +113,7 @@ export default function Register() {
               <MailIcon className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <label htmlFor="password" className="text-sm font-medium">
               Password
@@ -127,7 +142,7 @@ export default function Register() {
               </button>
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <label htmlFor="confirmPassword" className="text-sm font-medium">
               Confirm Password
@@ -151,7 +166,9 @@ export default function Register() {
             className="w-full"
             disabled={registerMutation.isPending}
           >
-            {registerMutation.isPending ? "Creating Account..." : "Create Account"}
+            {registerMutation.isPending
+              ? "Creating Account..."
+              : "Create Account"}
           </Button>
         </form>
 
@@ -166,4 +183,4 @@ export default function Register() {
       </Card>
     </div>
   );
-} 
+}

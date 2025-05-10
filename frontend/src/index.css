@@ -6,19 +6,19 @@
   html {
     @apply scroll-smooth;
   }
-  
+
   /* Default dark mode styles */
   :root {
     --background: #0f172a;
     --background-light: #1e293b;
-    --text-primary: #ffffff;
+    --text-primary: #fff;
     --text-secondary: #94a3b8;
     --primary: #7dd3fc;
     --primary-dark: #0284c7;
     --accent: #a78bfa;
     --border-color: #1e293b;
   }
-  
+
   /* Light mode styles */
   .light {
     --background: #f8fafc;
@@ -30,9 +30,12 @@
     --accent: #8b5cf6;
     --border-color: #e2e8f0;
   }
-  
+
   body {
     @apply bg-[var(--background)] text-[var(--text-primary)];
-    transition: background-color 0.3s ease, color 0.3s ease;
+
+    transition:
+      background-color 0.3s ease,
+      color 0.3s ease;
   }
-} 
+}

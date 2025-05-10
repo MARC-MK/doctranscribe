@@ -1,3 +1,4 @@
+import * as React from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import Upload from "@/pages/Upload";
@@ -11,6 +12,8 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import { Toaster } from "sonner";
 import { useAuth } from "@/lib/auth";
+
+// NOTE: ESLint may show a false positive for 'JSX is not defined' due to the new JSX transform (React 18+). This is safe to ignore if 'jsx': 'react-jsx' is set in tsconfig.json.
 
 // Protected route component
 function ProtectedRoute({ children }: { children: JSX.Element }) {
@@ -44,47 +47,68 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/help" element={<Help />} />
-            
+
             {/* Protected routes */}
-            <Route path="/" element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/upload" element={
-              <ProtectedRoute>
-                <Upload />
-              </ProtectedRoute>
-            } />
-            <Route path="/document/:documentId" element={
-              <ProtectedRoute>
-                <DocumentView />
-              </ProtectedRoute>
-            } />
-            <Route path="/results" element={
-              <ProtectedRoute>
-                <Results />
-              </ProtectedRoute>
-            } />
-            <Route path="/settings" element={
-              <ProtectedRoute>
-                <Settings />
-              </ProtectedRoute>
-            } />
-            <Route path="/assistant" element={
-              <ProtectedRoute>
-                <Assistant />
-              </ProtectedRoute>
-            } />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/upload"
+              element={
+                <ProtectedRoute>
+                  <Upload />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/document/:documentId"
+              element={
+                <ProtectedRoute>
+                  <DocumentView />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/results"
+              element={
+                <ProtectedRoute>
+                  <Results />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <Settings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/assistant"
+              element={
+                <ProtectedRoute>
+                  <Assistant />
+                </ProtectedRoute>
+              }
+            />
           </Routes>
         </div>
       </main>
       <footer className="bg-background border-t border-background-light py-4 text-center text-gray-400 text-sm">
-        <p>DocTranscribe &copy; {new Date().getFullYear()} - Convert handwritten surveys to digital data</p>
+        <p>
+          DocTranscribe &copy; {new Date().getFullYear()} - Convert handwritten
+          surveys to digital data
+        </p>
       </footer>
       <Toaster position="top-right" />
     </div>
   );
 }
 
-export default App; 
+export default App;

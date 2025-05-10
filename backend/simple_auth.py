@@ -14,8 +14,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session
 
 from app.database import init_db, get_session
-from app.auth import authenticate_user, create_access_token, get_current_user
-from app.models import User
+from app.auth import authenticate_user, create_access_token
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

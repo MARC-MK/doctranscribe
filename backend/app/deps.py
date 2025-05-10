@@ -1,7 +1,6 @@
 import boto3
 from .config import settings
 from sqlmodel import Session, create_engine
-from fastapi import Request, Depends
 import os
 
 # Assume the engine is created and attached to app.state.engine in main.py or here

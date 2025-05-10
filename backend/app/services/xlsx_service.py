@@ -1,18 +1,17 @@
 """
 XLSX export service for generating Excel files from extraction results.
 """
-import io
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import List, Optional, Dict, Any, Union
 from uuid import UUID
+import json
 
 import pandas as pd
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
-from openpyxl.worksheet.worksheet import Worksheet
 from sqlmodel import Session, select
 
 from ..models import ExtractionJob, ExtractionResult, ProcessingStatus, XLSXExport
@@ -27,6 +26,60 @@ EXCEL_DIR.mkdir(exist_ok=True)
 
 class XLSXExportService:
     """Service for generating Excel files from extraction results."""
+    
+    @staticmethod
+    def sanitize_data(content: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Sanitize and clean data to make it Excel-compatible.
+        
+        Args:
+            content: The content dictionary to sanitize
+            
+        Returns:
+            Dict[str, Any]: Sanitized content dictionary
+        """
+        if not content:
+            return {}
+        
+        # Make a copy to avoid modifying the original
+        clean_content = {}
+        
+        # Process each key in the content dictionary
+        for key, value in content.items():
+            # Handle nested dictionaries
+            if isinstance(value, dict):
+                clean_content[key] = XLSXExportService.sanitize_data(value)
+            
+            # Handle lists - this is where we often have issues
+            elif isinstance(value, list):
+                # Check if it's a list of dictionaries
+                if all(isinstance(item, dict) for item in value):
+                    # Convert list of dicts to a simpler format
+                    clean_list = []
+                    for item in value:
+                        # Recursively sanitize each dict in the list
+                        clean_item = XLSXExportService.sanitize_data(item)
+                        clean_list.append(clean_item)
+                    clean_content[key] = clean_list
+                else:
+                    # For simple lists, just convert to string
+                    try:
+                        clean_content[key] = json.dumps(value)
+                    except:
+                        clean_content[key] = str(value)
+            
+            # Handle other types
+            else:
+                # Convert to string if it's not a basic type
+                if not isinstance(value, (str, int, float, bool, type(None))):
+                    try:
+                        clean_content[key] = str(value)
+                    except:
+                        clean_content[key] = "Unconvertible data"
+                else:
+                    clean_content[key] = value
+        
+        return clean_content
     
     @staticmethod
     async def generate_xlsx(job_id: UUID, session: Session) -> XLSXExport:
@@ -92,23 +145,71 @@ class XLSXExportService:
             # Process the content
             content = result.content
             if isinstance(content, dict):
-                for field_name, value in content.items():
-                    ws.append([field_name, value, page_num, result.confidence_score or "N/A"])
+                # Sanitize the content to ensure it's Excel-compatible
+                try:
+                    sanitized_content = XLSXExportService.sanitize_data(content)
                     
-                    # Style the row
-                    for col_num in range(1, 5):
-                        cell = ws.cell(row=row_num, column=col_num)
-                        cell.border = Border(
-                            left=Side(style="thin"),
-                            right=Side(style="thin"),
-                            top=Side(style="thin"),
-                            bottom=Side(style="thin")
-                        )
+                    # Special handling for questions list
+                    if "questions" in sanitized_content and isinstance(sanitized_content["questions"], list):
+                        logger.info(f"Processing questions list with {len(sanitized_content['questions'])} items")
+                        for i, question_data in enumerate(sanitized_content["questions"]):
+                            if isinstance(question_data, dict):
+                                question = question_data.get("question", f"Question {i+1}")
+                                answer = question_data.get("answer", "")
+                                confidence = question_data.get("confidence", 0)
+                                
+                                ws.append([question, answer, page_num, confidence])
+                                
+                                # Style the row
+                                for col_num in range(1, 5):
+                                    cell = ws.cell(row=row_num, column=col_num)
+                                    cell.border = Border(
+                                        left=Side(style="thin"),
+                                        right=Side(style="thin"),
+                                        top=Side(style="thin"),
+                                        bottom=Side(style="thin")
+                                    )
+                                    
+                                    # Highlight illegible values
+                                    if col_num == 2 and answer == "[ILLEGIBLE]":
+                                        cell.fill = PatternFill(start_color="FFCCCC", end_color="FFCCCC", fill_type="solid")
+                                
+                                row_num += 1
+                    
+                    # Process other fields as before
+                    for field_name, value in sanitized_content.items():
+                        # Skip the questions list as it's already processed
+                        if field_name == "questions":
+                            continue
                         
-                        # Highlight illegible values
-                        if col_num == 2 and value == "[ILLEGIBLE]":
-                            cell.fill = PatternFill(start_color="FFCCCC", end_color="FFCCCC", fill_type="solid")
-                    
+                        # Convert complex values to strings
+                        if isinstance(value, (dict, list)):
+                            try:
+                                value = json.dumps(value)
+                            except:
+                                value = str(value)
+                        
+                        ws.append([field_name, value, page_num, result.confidence_score or "N/A"])
+                        
+                        # Style the row
+                        for col_num in range(1, 5):
+                            cell = ws.cell(row=row_num, column=col_num)
+                            cell.border = Border(
+                                left=Side(style="thin"),
+                                right=Side(style="thin"),
+                                top=Side(style="thin"),
+                                bottom=Side(style="thin")
+                            )
+                            
+                            # Highlight illegible values
+                            if col_num == 2 and value == "[ILLEGIBLE]":
+                                cell.fill = PatternFill(start_color="FFCCCC", end_color="FFCCCC", fill_type="solid")
+                        
+                        row_num += 1
+                except Exception as e:
+                    # If we encounter an error, log it and add an error row
+                    logger.error(f"Error processing content: {str(e)}")
+                    ws.append(["Error", f"Could not process content: {str(e)}", page_num, "N/A"])
                     row_num += 1
         
         # Auto-adjust column widths

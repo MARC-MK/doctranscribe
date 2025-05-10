@@ -1,5 +1,11 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { getCurrentUser, logout as apiLogout } from './api';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import { getCurrentUser, logout as apiLogout } from "./api";
 
 interface User {
   id: string;
@@ -31,26 +37,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Check if user is already logged in (token in localStorage)
     const checkAuth = async () => {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem("authToken");
       if (token) {
         try {
           const userData = await getCurrentUser();
           setUser(userData);
         } catch (error) {
-          console.error('Error fetching user data:', error);
-          
+          console.error("Error fetching user data:", error);
+
           // Fallback: If token exists but API fails, use mock user
-          if (token.startsWith('mock_jwt_token_')) {
-            console.log('Using fallback authentication data');
+          if (token.startsWith("mock_jwt_token_")) {
+            console.log("Using fallback authentication data");
             setUser({
               id: "1",
               email: "admin@doctranscribe.com",
               name: "Admin User",
-              role: "admin"
+              role: "admin",
             });
           } else {
             // If not a mock token, clear it
-            localStorage.removeItem('authToken');
+            localStorage.removeItem("authToken");
           }
         }
       }
@@ -78,4 +84,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   return useContext(AuthContext);
-} 
+}

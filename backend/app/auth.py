@@ -3,7 +3,7 @@ Authentication module with JWT support for DocTranscribe.
 """
 import os
 from datetime import datetime, timedelta
-from typing import Dict, Optional, Union
+from typing import Dict, Optional
 import logging
 from uuid import UUID
 
@@ -100,7 +100,7 @@ async def get_current_user(
             logger.warning("Missing email or user_id in token")
             raise credentials_exception
             
-        token_data = TokenData(email=email, user_id=user_id)
+        TokenData(email=email, user_id=user_id)
         
     except JWTError as e:
         logger.error(f"JWT decode error: {str(e)}")

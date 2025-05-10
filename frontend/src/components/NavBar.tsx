@@ -1,21 +1,28 @@
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '@/lib/auth';
-import { Button } from '@/components/ui/button';
-import { HomeIcon, UploadIcon, FileTextIcon, SettingsIcon, HelpCircleIcon, LogOutIcon } from 'lucide-react';
+import React from "react";
+import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
+import {
+  Home,
+  Upload,
+  FileText,
+  Settings,
+  HelpCircle,
+  LogOut,
+} from "lucide-react";
 
 export default function NavBar() {
   const location = useLocation();
   const { user, logout, isAuthenticated } = useAuth();
-  
+
   const isActive = (path: string) => location.pathname === path;
-  
+
   const navItems = [
-    { path: '/', icon: HomeIcon, label: 'Dashboard' },
-    { path: '/upload', icon: UploadIcon, label: 'Upload' },
-    { path: '/results', icon: FileTextIcon, label: 'Results' },
-    { path: '/settings', icon: SettingsIcon, label: 'Settings' },
-    { path: '/help', icon: HelpCircleIcon, label: 'Help' },
+    { path: "/", icon: Home, label: "Dashboard" },
+    { path: "/upload", icon: Upload, label: "Upload" },
+    { path: "/results", icon: FileText, label: "Results" },
+    { path: "/settings", icon: Settings, label: "Settings" },
+    { path: "/help", icon: HelpCircle, label: "Help" },
   ];
 
   return (
@@ -24,7 +31,7 @@ export default function NavBar() {
         <div className="flex items-center gap-2">
           <span className="text-2xl font-bold text-white">DocTranscribe</span>
         </div>
-        
+
         {isAuthenticated && (
           <nav className="hidden md:flex items-center space-x-4">
             {navItems.map((item) => {
@@ -35,8 +42,8 @@ export default function NavBar() {
                   to={item.path}
                   className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium ${
                     isActive(item.path)
-                      ? 'bg-gray-800 text-white'
-                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                      ? "bg-gray-800 text-white"
+                      : "text-gray-300 hover:bg-gray-800 hover:text-white"
                   }`}
                 >
                   <IconComponent className="h-4 w-4" />
@@ -46,13 +53,13 @@ export default function NavBar() {
             })}
           </nav>
         )}
-        
+
         <div className="flex items-center gap-4">
           {isAuthenticated ? (
             <div className="flex items-center gap-4">
               <div className="hidden md:block text-right">
                 <p className="text-sm font-medium text-white">
-                  {user?.name || 'User'}
+                  {user?.name || "User"}
                 </p>
                 <p className="text-xs text-gray-400">{user?.email}</p>
               </div>
@@ -62,7 +69,7 @@ export default function NavBar() {
                 onClick={() => logout()}
                 className="flex items-center gap-1"
               >
-                <LogOutIcon className="h-4 w-4" />
+                <LogOut className="h-4 w-4" />
                 <span className="hidden md:inline">Logout</span>
               </Button>
             </div>
@@ -84,4 +91,4 @@ export default function NavBar() {
       </div>
     </header>
   );
-} 
+}

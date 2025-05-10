@@ -1,10 +1,11 @@
+import React from "react";
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { UploadIcon, FileIcon, XIcon, CheckIcon, AlertCircleIcon } from "lucide-react";
+import { Upload as UploadIcon, File, X } from "lucide-react";
 import { toast } from "sonner";
 import { uploadDocument } from "@/lib/api";
 
@@ -25,7 +26,9 @@ export default function Upload() {
       navigate(`/document/${data.id}`);
     },
     onError: (error) => {
-      toast.error(`Upload failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+      toast.error(
+        `Upload failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     },
   });
 
@@ -70,10 +73,10 @@ export default function Upload() {
       toast.error("Please select a file to upload");
       return;
     }
-    
+
     uploadMutation.mutate({
       file,
-      apiKey: apiKey.trim() || undefined
+      apiKey: apiKey.trim() || undefined,
     });
   };
 
@@ -88,9 +91,9 @@ export default function Upload() {
     <div className="flex flex-col gap-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Upload Document</h1>
-        <Button 
-          variant="default" 
-          onClick={handleSubmit} 
+        <Button
+          variant="default"
+          onClick={handleSubmit}
           disabled={!file || uploadMutation.isPending}
         >
           {uploadMutation.isPending ? "Uploading..." : "Process Document"}
@@ -98,7 +101,7 @@ export default function Upload() {
       </div>
 
       <Card className="p-6">
-        <div 
+        <div
           className={`
             border-2 border-dashed rounded-lg p-8 text-center 
             ${dragActive ? "border-primary bg-primary/10" : "border-gray-700"}
@@ -121,28 +124,34 @@ export default function Upload() {
           {!file ? (
             <>
               <UploadIcon className="mx-auto h-12 w-12 text-gray-500 mb-4" />
-              <h3 className="text-xl font-medium">Drag & drop your file here</h3>
-              <p className="text-gray-500 mt-2">or click to browse your files</p>
+              <h3 className="text-xl font-medium">
+                Drag & drop your file here
+              </h3>
+              <p className="text-gray-500 mt-2">
+                or click to browse your files
+              </p>
               <p className="text-xs text-gray-400 mt-4">Supported file: PDF</p>
             </>
           ) : (
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <FileIcon className="h-8 w-8 text-primary" />
+                <File className="h-8 w-8 text-primary" />
                 <div className="text-left">
                   <p className="font-medium">{file.name}</p>
-                  <p className="text-sm text-gray-500">{(file.size / 1024 / 1024).toFixed(2)} MB • PDF</p>
+                  <p className="text-sm text-gray-500">
+                    {(file.size / 1024 / 1024).toFixed(2)} MB • PDF
+                  </p>
                 </div>
               </div>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 size="icon"
                 onClick={(e) => {
                   e.stopPropagation();
                   clearFile();
                 }}
               >
-                <XIcon className="h-5 w-5" />
+                <X className="h-5 w-5" />
               </Button>
             </div>
           )}
@@ -150,7 +159,9 @@ export default function Upload() {
 
         {file && (
           <div className="mt-4">
-            <h4 className="text-sm font-medium mb-2">OpenAI API Key (Optional)</h4>
+            <h4 className="text-sm font-medium mb-2">
+              OpenAI API Key (Optional)
+            </h4>
             <div className="flex gap-2">
               <input
                 type="password"
@@ -159,8 +170,8 @@ export default function Upload() {
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
               />
-              <Button 
-                variant="secondary" 
+              <Button
+                variant="secondary"
                 className="text-xs"
                 onClick={() => setApiKey("")}
               >
@@ -193,7 +204,9 @@ export default function Upload() {
             </div>
             <div>
               <h4 className="font-medium">Upload your document</h4>
-              <p className="text-gray-500 text-sm">PDF files containing handwritten survey forms</p>
+              <p className="text-gray-500 text-sm">
+                PDF files containing handwritten survey forms
+              </p>
             </div>
           </li>
           <li className="flex gap-3">
@@ -202,7 +215,9 @@ export default function Upload() {
             </div>
             <div>
               <h4 className="font-medium">AI Processing</h4>
-              <p className="text-gray-500 text-sm">Our GPT-4.1 powered system extracts handwritten text</p>
+              <p className="text-gray-500 text-sm">
+                Our GPT-4.1 powered system extracts handwritten text
+              </p>
             </div>
           </li>
           <li className="flex gap-3">
@@ -211,11 +226,13 @@ export default function Upload() {
             </div>
             <div>
               <h4 className="font-medium">Review and Download</h4>
-              <p className="text-gray-500 text-sm">Download your extracted data as a structured Excel file</p>
+              <p className="text-gray-500 text-sm">
+                Download your extracted data as a structured Excel file
+              </p>
             </div>
           </li>
         </ol>
       </Card>
     </div>
   );
-} 
+}

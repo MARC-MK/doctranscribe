@@ -1,15 +1,15 @@
-import React from 'react';
+import React from "react";
 
 interface ProgressProps extends React.HTMLAttributes<HTMLDivElement> {
   value?: number;
   max?: number;
 }
 
-export function Progress({ 
-  value = 0, 
-  max = 100, 
-  className = '',
-  ...props 
+export function Progress({
+  value = 0,
+  max = 100,
+  className = "",
+  ...props
 }: ProgressProps) {
   const percentage = Math.min(100, Math.round((value / max) * 100));
 
@@ -30,4 +30,4 @@ export function Progress({
   );
 }
 
-export default Progress; 
+export default Progress;

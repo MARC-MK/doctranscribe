@@ -1,24 +1,22 @@
-import React, { useEffect, useState } from 'react';
-import { NavLink } from 'react-router-dom';
-import { Brain } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
-
-interface AssistantNavLinkProps {
-  className?: string;
-}
+import React, { useEffect, useState } from "react";
+import { NavLink } from "react-router-dom";
+import { Brain } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 
 // Fetch data to determine if there are any completed jobs with anomalies
 const useCompletedJobs = () => {
   return useQuery({
-    queryKey: ['completedJobs'],
+    queryKey: ["completedJobs"],
     queryFn: async () => {
       try {
-        const response = await api.get('/results');
+        const response = await api.get("/results");
         // Filter for completed jobs with anomalies
-        return response.data.filter((job: any) => job.anomalies > 0);
+        return response.data.filter(
+          (job: { anomalies: number }) => job.anomalies > 0,
+        );
       } catch (error) {
-        console.error('Error fetching completed jobs:', error);
+        console.error("Error fetching completed jobs:", error);
         return [];
       }
     },
@@ -26,16 +24,16 @@ const useCompletedJobs = () => {
   });
 };
 
-const AssistantNavLink: React.FC<AssistantNavLinkProps> = ({ className }) => {
+const AssistantNavLink: React.FC = () => {
   const { data: completedJobs, isLoading } = useCompletedJobs();
   const [anomalyCount, setAnomalyCount] = useState(0);
-  
+
   useEffect(() => {
     if (completedJobs?.length) {
       // Calculate total anomalies across all jobs
       const totalAnomalies = completedJobs.reduce(
-        (sum: number, job: any) => sum + (job.anomalies || 0), 
-        0
+        (sum: number, job: { anomalies: number }) => sum + (job.anomalies || 0),
+        0,
       );
       setAnomalyCount(totalAnomalies);
     }
@@ -46,12 +44,14 @@ const AssistantNavLink: React.FC<AssistantNavLinkProps> = ({ className }) => {
   // Generic link class from NavBar
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     `flex items-center gap-2 px-4 py-2 rounded-md transition-colors duration-200 ${
-      isActive ? "bg-primary/10 text-primary font-medium" : "text-gray-300 hover:bg-background hover:text-white"
+      isActive
+        ? "bg-primary/10 text-primary font-medium"
+        : "text-gray-300 hover:bg-background hover:text-white"
     } ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}`;
 
   return (
-    <NavLink 
-      to="/assistant" 
+    <NavLink
+      to="/assistant"
       className={linkClass}
       onClick={(e) => isDisabled && e.preventDefault()}
       title={isDisabled ? "No anomalies to review" : "Anomaly Assistant"}
@@ -67,4 +67,4 @@ const AssistantNavLink: React.FC<AssistantNavLinkProps> = ({ className }) => {
   );
 };
 
-export default AssistantNavLink; 
+export default AssistantNavLink;

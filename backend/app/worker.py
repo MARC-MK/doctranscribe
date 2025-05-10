@@ -1,17 +1,13 @@
 """
 Background worker for document processing with OpenAI API.
 """
-import time
 import threading
 import logging
 import uuid
-import json
 import os
-import random
 from datetime import datetime
-from typing import Dict, List, Optional
 
-from sqlmodel import Session, select
+from sqlmodel import select
 
 from .models import Document, ProcessingStatus, ExtractionJob, ExtractionResult
 from .database import get_session

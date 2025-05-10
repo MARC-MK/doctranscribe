@@ -6,10 +6,9 @@ from fastapi import APIRouter, UploadFile, File, Depends, status, Request, Backg
 import pandas as pd
 import botocore.exceptions
 import random
-import json
 
 from ..services.extract import extract
-from ..schemas import ExtractionResult, JobResult, BatchJobRequest, BatchJobResult
+from ..schemas import JobResult, BatchJobRequest, BatchJobResult
 from ..deps import get_s3_client
 from ..config import settings
 from ..services.xlsx import to_xlsx_bytes
@@ -224,7 +223,7 @@ async def process_batch_job(batch_id: str, app):
             batch_job["progress"] = int(((i + 1) / total_files) * 100)
             
             # Generate random results
-            result = simulate_survey_extraction()
+            simulate_survey_extraction()
             
             # Increment anomalies
             batch_job["anomalies"] += random.randint(0, 2)

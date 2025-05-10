@@ -3,7 +3,7 @@ Database configuration and utilities for DocTranscribe.
 """
 import os
 from pathlib import Path
-from typing import Generator, Optional
+from typing import Generator
 
 from sqlmodel import Session, SQLModel, create_engine as sqlmodel_create_engine
 
@@ -53,7 +53,6 @@ def get_session() -> Generator[Session, None, None]:
 def create_db_and_tables() -> None:
     """Create all database tables."""
     # Import models here to ensure they're registered with SQLModel
-    from .models import Document, ExtractionJob, ExtractionResult, XLSXExport, User
     
     SQLModel.metadata.create_all(engine)
 

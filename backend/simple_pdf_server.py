@@ -4,20 +4,19 @@ Simple standalone PDF file server that just serves files from the uploads direct
 This bypasses all the complex backend code and validation issues.
 """
 import os
-import asyncio
 import base64
 import io
 import json
 import time
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import List, Dict
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from pdf2image import convert_from_path
-from PIL import Image, ImageEnhance, ImageFilter, ImageOps
+from PIL import Image, ImageEnhance, ImageOps
 import numpy as np
 
 
@@ -57,7 +56,6 @@ else:
 UPLOADS_DIR.mkdir(exist_ok=True)
 
 # OpenAI configuration
-import os
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 OPENAI_API_URL = "https://api.openai.com/v1/chat/completions"
 MODEL = "gpt-4.1"  # Using GPT-4.1 with vision capabilities
@@ -575,7 +573,7 @@ async def get_job_results(job_id: str):
             
             # Check if we have an API key for real processing
             if OPENAI_API_KEY:
-                print(f"Using OpenAI API for extraction")
+                print("Using OpenAI API for extraction")
                 
                 for i, img in enumerate(images):
                     page_num = i + 1
@@ -881,7 +879,6 @@ async def debug_files():
     Debug endpoint to list all available files in the uploads directory.
     """
     try:
-        files = []
         # Get current working directory
         cwd = os.getcwd()
         # Try multiple possible upload paths

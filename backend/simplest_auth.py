@@ -5,13 +5,11 @@ from fastapi import FastAPI, Form, HTTPException, File, UploadFile, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 import logging
-import json
 from datetime import datetime
 import io
 import time
 import uuid
-import asyncio
-from typing import Dict, Optional
+from typing import Optional
 import threading
 
 # Configure logging

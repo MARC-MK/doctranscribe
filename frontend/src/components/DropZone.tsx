@@ -1,11 +1,18 @@
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { api } from "@/lib/api";
-import { UploadCloud, Loader2, FileText, X, AlertCircle, Eye } from "lucide-react";
+import {
+  UploadCloud,
+  Loader2,
+  FileText,
+  X,
+  AlertCircle,
+  Eye,
+} from "lucide-react";
 import PDFPreview from "./PDFPreview";
 
 interface Props {
-  onSuccess: (data: any) => void;
+  onSuccess: (data: unknown) => void;
 }
 
 export default function DropZone({ onSuccess }: Props) {
@@ -16,23 +23,23 @@ export default function DropZone({ onSuccess }: Props) {
   const [previewFile, setPreviewFile] = useState<File | null>(null);
 
   const removeFile = (fileToRemove: File) => {
-    setSelectedFiles(selectedFiles.filter(file => file !== fileToRemove));
+    setSelectedFiles(selectedFiles.filter((file) => file !== fileToRemove));
   };
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (!acceptedFiles.length) return;
-    
+
     // Add files to the queue
-    setSelectedFiles(prev => [...prev, ...acceptedFiles]);
+    setSelectedFiles((prev) => [...prev, ...acceptedFiles]);
   }, []);
 
   const startUpload = async () => {
     if (!selectedFiles.length) return;
-    
+
     setError(null);
     setUploading(true);
     setUploadProgress(0);
-    
+
     try {
       // First check if backend is reachable
       try {
@@ -40,48 +47,50 @@ export default function DropZone({ onSuccess }: Props) {
         console.log("Test endpoint response:", testResponse.data);
       } catch (testErr) {
         console.error("Backend test failed:", testErr);
-        throw new Error(`Backend connectivity test failed: ${testErr instanceof Error ? testErr.message : 'Unknown error'}`);
+        throw new Error(
+          `Backend connectivity test failed: ${testErr instanceof Error ? testErr.message : "Unknown error"}`,
+        );
       }
-      
+
       // For demonstration, we'll simulate a batch upload with progress
       const totalFiles = selectedFiles.length;
-      
+
       // This would be a real batch upload in production
       // const form = new FormData();
       // selectedFiles.forEach((file, index) => {
       //   form.append(`files[${index}]`, file);
       // });
-      
+
       // Simulate file processing with progress
       for (let i = 0; i < totalFiles; i++) {
         // In a real app, you'd upload all files at once, not one by one
         const progressPercent = Math.round(((i + 1) / totalFiles) * 100);
         setUploadProgress(progressPercent);
-        
+
         // Simulate processing delay for demo
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 500));
       }
 
       // For now, just use the temporary endpoint and simulate success
       const response = await api.get("/temp-upload");
       console.log("Upload simulation response:", response.data);
-      
+
       // Create a fake batch result with the uploaded file count
       const resultData = {
         sheet_name: "Survey Batch " + new Date().toLocaleDateString(),
         anomalies: Math.floor(Math.random() * 5), // Random number of anomalies for demo
         job_id: "batch-" + Date.now(),
-        documents: selectedFiles.length
+        documents: selectedFiles.length,
       };
-      
+
       // Clear the file list on success
       setSelectedFiles([]);
-      
+
       // Call the success handler
       onSuccess(resultData);
     } catch (err) {
       console.error("Upload error:", err);
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      const errorMessage = err instanceof Error ? err.message : "Unknown error";
       setError(errorMessage);
     } finally {
       setUploading(false);
@@ -89,10 +98,10 @@ export default function DropZone({ onSuccess }: Props) {
     }
   };
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
-    onDrop, 
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
     accept: { "application/pdf": [] },
-    disabled: isUploading
+    disabled: isUploading,
   });
 
   const openPreview = (file: File) => {
@@ -108,20 +117,20 @@ export default function DropZone({ onSuccess }: Props) {
       <div
         {...getRootProps()}
         className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors duration-200 
-          ${isDragActive ? 'border-primary bg-primary/5' : 'border-gray-600'} 
-          ${isUploading ? 'bg-gray-900/50 cursor-not-allowed' : 'bg-gray-900/20 cursor-pointer'}`}
+          ${isDragActive ? "border-primary bg-primary/5" : "border-gray-600"} 
+          ${isUploading ? "bg-gray-900/50 cursor-not-allowed" : "bg-gray-900/20 cursor-pointer"}`}
       >
         <input {...getInputProps()} disabled={isUploading} />
         <UploadCloud size={48} className="mx-auto text-primary mb-4" />
         <h3 className="text-xl font-semibold mb-2">Batch Survey Upload</h3>
         <p className="text-gray-400 mb-4">
-          {isDragActive ? 
-            "Drop the survey PDFs here..." : 
-            "Drag and drop survey PDFs here, or click to select files"
-          }
+          {isDragActive
+            ? "Drop the survey PDFs here..."
+            : "Drag and drop survey PDFs here, or click to select files"}
         </p>
         <p className="text-sm text-gray-500">
-          Upload up to 100 survey PDFs at once. Each file should be less than 10MB.
+          Upload up to 100 survey PDFs at once. Each file should be less than
+          10MB.
         </p>
       </div>
 
@@ -141,15 +150,16 @@ export default function DropZone({ onSuccess }: Props) {
         <div className="bg-background border border-background-light rounded-lg overflow-hidden">
           <div className="p-4 border-b border-background-light flex justify-between items-center">
             <h3 className="font-medium">
-              {selectedFiles.length} {selectedFiles.length === 1 ? 'File' : 'Files'} Selected
+              {selectedFiles.length}{" "}
+              {selectedFiles.length === 1 ? "File" : "Files"} Selected
             </h3>
             <button
               onClick={startUpload}
               disabled={isUploading}
               className={`px-4 py-1.5 rounded-md flex items-center gap-1 ${
-                isUploading 
-                  ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                  : 'bg-primary text-white hover:bg-primary/90'
+                isUploading
+                  ? "bg-gray-700 text-gray-400 cursor-not-allowed"
+                  : "bg-primary text-white hover:bg-primary/90"
               }`}
             >
               {isUploading ? (
@@ -167,7 +177,7 @@ export default function DropZone({ onSuccess }: Props) {
           {/* Progress bar during upload */}
           {isUploading && (
             <div className="w-full bg-background-light h-2">
-              <div 
+              <div
                 className="bg-primary h-2 transition-all duration-300 ease-out"
                 style={{ width: `${uploadProgress}%` }}
               ></div>
@@ -176,7 +186,7 @@ export default function DropZone({ onSuccess }: Props) {
 
           <div className="max-h-64 overflow-y-auto p-2">
             {selectedFiles.map((file, index) => (
-              <div 
+              <div
                 key={file.name + index}
                 className="flex items-center justify-between p-2 hover:bg-background-light/50 rounded"
               >
@@ -222,14 +232,13 @@ export default function DropZone({ onSuccess }: Props) {
       {/* Help text */}
       <div className="text-center text-gray-400 text-sm">
         <p>
-          Supported format: PDF only. Maximum 100 files per batch, 10MB per file.
+          Supported format: PDF only. Maximum 100 files per batch, 10MB per
+          file.
         </p>
       </div>
 
       {/* PDF Preview Modal */}
-      {previewFile && (
-        <PDFPreview file={previewFile} onClose={closePreview} />
-      )}
+      {previewFile && <PDFPreview file={previewFile} onClose={closePreview} />}
     </div>
   );
-} 
+}

@@ -1,7 +1,26 @@
+version: "3.9"
+
 services:
   backend:
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./backend:/app/backend
+      - ./uploads:/app/uploads
+      - ./error_pdfs:/app/error_pdfs
+      - ./excel_exports:/app/excel_exports
     environment:
       # Put your actual API keys here for testing
-      - AWS_ACCESS_KEY_ID=your_aws_access_key_id_here
-      - AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key_here
-      - OPENAI_API_KEY=your_openai_api_key_here
+      - AWS_ACCESS_KEY_ID=AKIAQG5ED7HVSJZV5UK7
+      - AWS_SECRET_ACCESS_KEY=2C9B9KKIZ5Qeddi8SpeUOi6XnB4K51XdEOGIzyN
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=gpt-4.1-2025-04-14
+      - DEVELOPMENT=true
+      - EXCEL_DIR=/app/excel_exports
+      - DEBUG=true
+
+  frontend:
+    ports:
+      - "3001:3001"
+    environment:
+      - VITE_API_URL=http://localhost:8080

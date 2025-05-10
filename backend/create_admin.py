@@ -14,7 +14,7 @@ from app.auth import get_password_hash
 
 def create_admin_user(email="admin@doctranscribe.com", password="adminpassword", name="Admin User"):
     """Create an admin user if it doesn't exist already."""
-    print(f"Initializing database...")
+    print("Initializing database...")
     init_db()
     
     # Create a database session

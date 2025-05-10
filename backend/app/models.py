@@ -6,7 +6,7 @@ from enum import Enum
 from typing import List, Optional
 from uuid import UUID, uuid4
 
-from sqlmodel import Field, Relationship, SQLModel, Table
+from sqlmodel import Field, Relationship, SQLModel
 from sqlalchemy import Column, JSON
 
 
@@ -77,6 +77,8 @@ class ExtractionJobBase(SQLModel):
     model_name: str = "gpt-4.1"
     pages_processed: int = 0
     total_pages: int = 0
+    confidence_score: Optional[float] = None
+    error_message: Optional[str] = None
 
 
 class ExtractionJob(ExtractionJobBase, table=True):

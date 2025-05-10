@@ -4,9 +4,9 @@ import json
 import logging
 import os
 import time
-from typing import List, Optional, Dict, Any, Union
+from typing import List, Optional, Dict, Any
 
-from openai import OpenAI, AsyncOpenAI
+from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageParam
 from fastapi import HTTPException
 from pdf2image import convert_from_bytes
@@ -156,11 +156,36 @@ class OpenAIService:
             {
                 "role": "system",
                 "content": (
-                    "You are a precise handwriting recognition expert specializing in medical survey forms. "
-                    "Extract all handwritten text from the image maintaining the form structure. "
-                    "Identify form fields and their values. Format numerical data appropriately. "
-                    "If text is illegible, mark it as [ILLEGIBLE]. "
-                    "Return data in a structured JSON format with field names and values."
+                    "You are a precise document extraction expert specializing in form analysis and metadata extraction. "
+                    "Your task is to extract all text, data and metadata from the image, while maintaining the document structure. "
+                    "\n\n"
+                    "EXTRACTION REQUIREMENTS:\n"
+                    "1. Extract ALL text visible in the document, both printed and handwritten\n"
+                    "2. Identify form fields, labels, values, and their relationships\n"
+                    "3. Extract all metadata, such as form identifiers, dates, version numbers, company info\n"
+                    "4. Identify headers, footers, section titles, and organizational structure\n"
+                    "5. Label each section appropriately based on its content\n"
+                    "6. Format numerical data appropriately (dates, numbers, etc.)\n"
+                    "7. If text is illegible, mark it as [ILLEGIBLE]\n"
+                    "8. Identify handwritten vs printed text (mark with is_handwritten: true/false)\n"
+                    "9. Include a confidence score for each extracted field (0.0-1.0)\n"
+                    "10. Detect table structures and preserve their data format\n"
+                    "\n\n"
+                    "IMPORTANT: Return data in a well-structured JSON format with these top-level keys:\n"
+                    "- form_title: The title of the document\n"
+                    "- document_type: The type of document (medical form, survey, application, etc.)\n"
+                    "- explanation_text: Any explanatory text about the document's purpose\n"
+                    "- header: Document header information\n"
+                    "- footer: Document footer information\n"
+                    "- metadata: Any document metadata (form ID, version, etc.)\n"
+                    "- overall_confidence: Overall confidence in extraction accuracy (0.0-1.0)\n"
+                    "- sections: Array of logical sections, each with fields array\n"
+                    "- questions: Array of question-answer pairs found in the document\n"
+                    "- tables: Array of table data if present\n"
+                    "- form_elements: Object containing checkboxes, signatures, etc.\n"
+                    "- notes: Any additional observations\n"
+                    "\n"
+                    "Always include date formats for dates and appropriate units for measured values."
                 )
             },
             {
@@ -168,7 +193,7 @@ class OpenAIService:
                 "content": [
                     {
                         "type": "text",
-                        "text": f"Extract all handwritten information from this survey form (page {page_num})."
+                        "text": f"Extract all text, data, and metadata from this document (page {page_num}). Include all printed and handwritten content. Preserve form structure and identify all key elements."
                     },
                     {
                         "type": "image_url",
@@ -248,11 +273,28 @@ class OpenAIService:
         Returns:
             Structured data suitable for XLSX generation
         """
-        # For now, a simple combination of all pages
+        # Initialize combined data structure with all possible fields
         combined_data = {
-            "form_fields": {},
-            "tables": []
+            "form_title": "",
+            "document_type": "",
+            "explanation_text": "",
+            "header": {},
+            "footer": {},
+            "metadata": {},
+            "overall_confidence": 0.0,
+            "sections": [],
+            "questions": [],
+            "tables": [],
+            "form_elements": {
+                "checkboxes": [],
+                "signatures": []
+            },
+            "notes": ""
         }
+        
+        # Track how many pages contributed to the confidence score
+        confidence_pages = 0
+        total_confidence = 0.0
         
         for page in page_results:
             try:
@@ -263,18 +305,76 @@ class OpenAIService:
                 # Extract content
                 page_content = page.get("content", {})
                 
-                # Merge form fields
-                if isinstance(page_content, dict) and "form_fields" in page_content:
-                    combined_data["form_fields"].update(page_content["form_fields"])
-                elif isinstance(page_content, dict):
-                    # If no form_fields key but content is a dict, merge it directly
-                    combined_data["form_fields"].update(page_content)
+                # Skip if content is empty
+                if not page_content:
+                    continue
                 
-                # Append table data
-                if isinstance(page_content, dict) and "tables" in page_content:
+                # Simple string fields - take the longest/most descriptive one
+                for field in ["form_title", "document_type", "explanation_text", "notes"]:
+                    if field in page_content and isinstance(page_content[field], str):
+                        if len(page_content[field]) > len(combined_data[field]):
+                            combined_data[field] = page_content[field]
+                
+                # Header and footer - take the first one found
+                for field in ["header", "footer"]:
+                    if field in page_content and (not combined_data[field] or combined_data[field] == {}):
+                        combined_data[field] = page_content[field]
+                
+                # Metadata - merge dictionaries
+                if "metadata" in page_content and isinstance(page_content["metadata"], dict):
+                    combined_data["metadata"].update(page_content["metadata"])
+                
+                # Track confidence for averaging
+                if "overall_confidence" in page_content and isinstance(page_content["overall_confidence"], (int, float)):
+                    total_confidence += float(page_content["overall_confidence"])
+                    confidence_pages += 1
+                
+                # Sections - append all
+                if "sections" in page_content and isinstance(page_content["sections"], list):
+                    combined_data["sections"].extend(page_content["sections"])
+                
+                # Questions - append all and add page number if missing
+                if "questions" in page_content and isinstance(page_content["questions"], list):
+                    for question in page_content["questions"]:
+                        if "page" not in question or not question["page"]:
+                            question["page"] = page.get("page", 0)
+                    combined_data["questions"].extend(page_content["questions"])
+                
+                # Tables - append all
+                if "tables" in page_content and isinstance(page_content["tables"], list):
                     combined_data["tables"].extend(page_content["tables"])
+                
+                # Form elements
+                if "form_elements" in page_content and isinstance(page_content["form_elements"], dict):
+                    # Checkboxes
+                    if "checkboxes" in page_content["form_elements"] and isinstance(page_content["form_elements"]["checkboxes"], list):
+                        combined_data["form_elements"]["checkboxes"].extend(page_content["form_elements"]["checkboxes"])
+                    
+                    # Signatures
+                    if "signatures" in page_content["form_elements"] and isinstance(page_content["form_elements"]["signatures"], list):
+                        combined_data["form_elements"]["signatures"].extend(page_content["form_elements"]["signatures"])
+            
             except Exception as e:
                 logger.warning(f"Error combining results for page {page.get('page')}: {str(e)}")
-                combined_data[f"raw_page_{page.get('page')}"] = page.get("content", {})
-                
+                if not combined_data.get("errors"):
+                    combined_data["errors"] = []
+                combined_data["errors"].append({
+                    "page": page.get("page"),
+                    "error": str(e)
+                })
+        
+        # Calculate the average confidence
+        if confidence_pages > 0:
+            combined_data["overall_confidence"] = round(total_confidence / confidence_pages, 2)
+        else:
+            # Default confidence if none provided
+            combined_data["overall_confidence"] = 0.8
+        
+        # Clean up empty fields
+        for key in list(combined_data.keys()):
+            if isinstance(combined_data[key], dict) and not combined_data[key]:
+                combined_data[key] = None
+            elif isinstance(combined_data[key], list) and not combined_data[key]:
+                combined_data[key] = None
+        
         return combined_data 
